@@ -89,16 +89,6 @@ output.param2K1B(j,:) = allmodels.twokonebetamodel{1,j}.x;
 end
 
 
-% Save data
-save('output.mat', 'output');
-
-
-
-
-
-
-
-
 
 
 
@@ -111,7 +101,7 @@ load output.mat;
 datos_long = readtable('datos_long.csv');
 unique_subs = unique(datos_long.sub);
 
-%% 1. Crear tabla principal con parámetros e IDs
+% 1. Crear tabla principal con parámetros e IDs
 
 % param2K2B: k_self, k_other, beta_self, beta_other
 param2K2B_table = array2table(output.param2K2B, ...
@@ -130,7 +120,7 @@ main_table = [subject_ids, param2K2B_table, param2K1B_table];
 % Guardar tabla principal
 writetable(main_table, 'output_parameters.csv');
 
-%% 2. Guardar métricas de ajuste (AIC, BIC, NLL) por modelo
+% 2. Guardar métricas de ajuste (AIC, BIC, NLL) por modelo
 
 % Las 4 columnas corresponden a los 4 modelos
 model_names = {'onekonebeta', 'onektwobetamodel', 'twokonebetamodel', 'twoktwobetamodel'};
@@ -150,14 +140,14 @@ nll_table = array2table([unique_subs, output.all_nnl_all], ...
     'VariableNames', ['subject_id', strcat('NLL_', model_names)]);
 writetable(nll_table, 'output_NLL.csv');
 
-%% 3. Guardar resumen de modelos (sumas totales)
+% 3. Guardar resumen de modelos (sumas totales)
 
 model_summary = array2table([output.sum_all_aic; output.sum_all_bic; output.sum_all_nnl], ...
     'VariableNames', model_names, ...
     'RowNames', {'sum_AIC', 'sum_BIC', 'sum_NLL'});
 writetable(model_summary, 'output_model_summary.csv', 'WriteRowNames', true);
 
-%% 4. Crear tabla completa (todo en un solo CSV)
+% 4. Crear tabla completa (todo en un solo CSV)
 
 complete_table = [subject_ids, param2K2B_table, param2K1B_table, ...
     array2table(output.all_aic_all, 'VariableNames', strcat('AIC_', model_names)), ...
@@ -167,10 +157,8 @@ complete_table = [subject_ids, param2K2B_table, param2K1B_table, ...
 writetable(complete_table, 'output_complete.csv');
 
 
-
-
-
-
+% Save data as matlab structure
+save('output.mat', 'output');
 
 
 
