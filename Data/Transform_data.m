@@ -3,7 +3,7 @@
 clear all;
 
 % Cargar datos desde CSV
-datos_long = readtable('C:\Users\yangy\Documents\MATLAB\Wepsilon\datos_long.csv');
+datos_long = readtable('C:\Users\yangy\Desktop\Comp_Models_Seba\Data\datos_long_models.csv');
 
 % Obtener información de la estructura de los datos
 unique_subs = unique(datos_long.sub);
@@ -41,4 +41,4 @@ end
 fprintf('Proporción de trabajar: %.2f%%\n', sum(data.chosen(:)==1)/numel(data.chosen)*100);
 
 % Guardar el archivo .mat en el mismo formato que data_all_seb.mat
-save(datos_long_transformed.mat, 'data');
+save('datos_filtrados_long.mat', 'data');
