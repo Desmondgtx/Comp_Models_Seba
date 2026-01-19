@@ -3,7 +3,18 @@
 clear all;
 
 % Cargar datos desde CSV
-datos_long = readtable('C:\Users\yangy\Desktop\Comp_Models_Seba\Data\datos_long_models.csv');
+datos_long = readtable('C:\Users\yangy\Desktop\Comp_Models_Seba\Data\datos_no_vulnerable.csv');
+
+
+% Segmentar por grupo
+grupo_vulnerable = datos_long(datos_long.grupo == 1, :); 
+grupo_no_vulnerable = datos_long(datos_long.grupo == 0, :); 
+
+% Guardar CSVs separados
+writetable(grupo_vulnerable, 'datos_vulnerable.csv'); % 43
+writetable(grupo_no_vulnerable, 'datos_no_vulnerable.csv'); % 41
+
+
 
 % Obtener información de la estructura de los datos
 unique_subs = unique(datos_long.sub);
@@ -41,4 +52,4 @@ end
 fprintf('Proporción de trabajar: %.2f%%\n', sum(data.chosen(:)==1)/numel(data.chosen)*100);
 
 % Guardar el archivo .mat en el mismo formato que data_all_seb.mat
-save('datos_filtrados_long.mat', 'data');
+save('datos_filtrados_no_vulnerable.mat', 'data');

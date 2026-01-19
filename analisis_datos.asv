@@ -1,4 +1,5 @@
-%% Análisis datos
+
+% Análisis datos
 
 % 1) ver el BIC total de cada modelo
 
@@ -6,7 +7,7 @@
 % 3879.58610951623	5216.93519856285	4054.3179600344	    5542.11566808483
 
 
-%% 2) dividir la muestra en vulnerable y no vulnerable y sumar separadamente los BIC por grupo (o correr los modelos con cada muestra grupal por separado)
+% 2) dividir la muestra en vulnerable y no vulnerable y sumar separadamente los BIC por grupo (o correr los modelos con cada muestra grupal por separado)
 
 % No Vulnerables
 % one_k_one_beta     one_k_two_beta     two_k_one_beta      two_k_two_beta 
@@ -17,7 +18,8 @@
 % 1888.07832133616	2601.55933369892	1982.87693469769	2768.02080500018
 
 
-%% 3) pescar el modelo 2k1b y ver diferencia  k_other - k_self (por sujeto y ver la dispersión) 
+% 3) pescar el modelo 2k1b y ver diferencia  k_other - k_self (por sujeto y ver la dispersión) 
+
 
 % Importar datos
 params_NV = readtable('No_vulnerables\id_2k2b_2k1b_parameters.csv');
@@ -49,17 +51,16 @@ subplot(1,2,1);
 scatter(1:height(params_NV), params_NV.diff_kself_minus_kother, 'filled');
 hold on;
 yline(mean(params_NV.diff_kself_minus_kother), 'r--', 'LineWidth', 2);
-xlabel('Sujeto'); ylabel('k_{self} - k_{other}');
-title('No Vulnerables: k_{self} - k_{other}');
+xlabel('Sujeto'); ylabel('k_{other} - k_{self}');
+title('No Vulnerables: k_{other} - k_{self}');
 
 subplot(1,2,2);
 histogram(params_NV.diff_kself_minus_kother, 15);
 xline(mean(params_NV.diff_kself_minus_kother), 'r--', 'LineWidth', 2);
-xlabel('k_{self} - k_{other}'); ylabel('Frecuencia');
+xlabel('k_{other} - k_{self}'); ylabel('Frecuencia');
 title(sprintf('Media = %.4f, SD = %.4f', mean(params_NV.diff_kself_minus_kother), std(params_NV.diff_kself_minus_kother)));
 
 sgtitle('Dispersión No Vulnerables - Modelo 2K1B');
-
 
 
 
@@ -92,6 +93,9 @@ title(sprintf('Media = %.4f, SD = %.4f', mean(params_V.diff_kother_minus_kself),
 sgtitle('Dispersión Vulnerables - Modelo 2K1B');
 
 
+
+
+
 figure;
 subplot(1,2,1);
 scatter(1:height(params_V), params_V.diff_kself_minus_kother, 'filled');
@@ -110,23 +114,34 @@ sgtitle('Dispersión Vulnerables - Modelo 2K1B');
 
 
 % Save data
-writetable(params_NV, 'params_NV.csv');
-writetable(params_V, 'params_V.csv');
+writematrix('params_NV', 'params_NV.csv');
+writematrix('params_V', 'params_V.csv');
 
 
 
-%% 4) wilcoxon rank entre vulnerable y no vulnerable
+% 4) wilcoxon rank entre vulnerable y no vulnerable
 
 % Importar datos
-% params_NV = readtable('params_NV.csv');
-% params_V = readtable('params_V.csv');
+params_NV = readtable('params_NV.csv');
+params_V = readtable('params_V.csv');
+
 
 % Variables a comparar
 variables = {'k_self_2K1B', 'k_other_2K1B', 'beta_2K1B', 'diff_kother_minus_kself'};
 p_values = zeros(1,4);
 
 for i = 1:length(variables)
-    [p_values(i), ~, ~] = ranksum(params_NV.(variables{i}), params_V.(variables{i}));
+    var = variables{i};
+    [p, h, stats] = ranksum(params_NV.(var), params_V.(var));
+    
+    fprintf('%s:\n', var);
+    fprintf('  Mediana NV = %.4f, Mediana V = %.4f\n', median(params_NV.(var)), median(params_V.(var)));
+    fprintf('  U = %.2f, p = %.4f', stats.ranksum, p);
+    if p < 0.05
+        fprintf(' *\n\n');
+    else
+        fprintf('\n\n');
+    end
 end
 
 % Boxplot comparativo

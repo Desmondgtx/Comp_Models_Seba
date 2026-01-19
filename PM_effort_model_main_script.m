@@ -43,9 +43,9 @@ elseif pick_sample==3;
     
 elseif pick_sample ==4;
     
-    numsubs=84;
+    numsubs=41;
     
-    load datos_filtrados_long.mat;
+    load datos_filtrados_no_vulnerable.mat;
 end
 
 cd(dir_analysis)
@@ -104,7 +104,7 @@ save('output.mat', "output")
 % load output.mat;
 
 % Load csv file
-datos_long = readtable('Data\datos_long_models.csv');
+datos_long = readtable('Data\datos_no_vulnerable.csv');
 unique_subs = unique(datos_long.sub);
 
 
