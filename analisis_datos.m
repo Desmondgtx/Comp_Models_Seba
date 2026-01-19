@@ -153,3 +153,15 @@ for i = 1:length(variables)
         title(sprintf('p = %.4f', p_values(i)));
     end
 end
+
+
+
+
+%% 5) Set de datos totales con grupo incluido
+
+% Merge params_NV y params_V con identificador de grupo
+params_NV.grupo = repmat({'No_Vulnerable'}, height(params_NV), 1);
+params_V.grupo = repmat({'Vulnerable'}, height(params_V), 1);
+
+params_all = [params_NV; params_V];
+writetable(params_all, 'params_all.csv');
