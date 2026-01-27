@@ -1,5 +1,8 @@
 %% Análisis datos
 
+clear all;
+clc;
+
 % 1) ver el BIC total de cada modelo
 
 % one_k_one_beta     one_k_two_beta     two_k_one_beta      two_k_two_beta    
@@ -167,4 +170,147 @@ params_all = [params_NV; params_V];
 writetable(params_all, 'params_all.csv');
 
 
+
+
 %% 6) ANOVA
+
+params_all = readtable('params_all.csv');
+
+% Preparar datos en formato wide
+anova_data = table(params_all.k_self_2K1B, params_all.k_other_2K1B, ...
+    categorical(params_all.grupo), ...
+    'VariableNames', {'k_self', 'k_other', 'grupo'});
+
+% Definir modelo y factor within
+rm = fitrm(anova_data, 'k_self-k_other ~ grupo', 'WithinDesign', table({'self';'other'}, 'VariableNames', {'agent'}));
+
+% ANOVA de medidas repetidas
+ranova_results = ranova(rm, 'WithinModel', 'agent');
+disp(ranova_results);
+
+% Efectos between-subjects
+between_results = anova(rm);
+disp(between_results);
+
+
+
+
+%% Visualización ANOVA
+
+% Calcular medias y SEM por grupo
+grupos = {'No_Vulnerable', 'Vulnerable'};
+medias = zeros(2,2); sem = zeros(2,2);
+
+for g = 1:2
+    idx = strcmp(params_all.grupo, grupos{g});
+    medias(g,:) = [mean(params_all.k_self_2K1B(idx)), mean(params_all.k_other_2K1B(idx))];
+    n = sum(idx);
+    sem(g,:) = [std(params_all.k_self_2K1B(idx))/sqrt(n), std(params_all.k_other_2K1B(idx))/sqrt(n)];
+end
+
+% Gráfico de interacción
+figure;
+b = bar(medias, 'grouped'); hold on;
+b(1).FaceColor = [0.3 0.6 0.8]; b(2).FaceColor = [0.9 0.4 0.3];
+
+% Barras de error
+x = [b(1).XEndPoints; b(2).XEndPoints];
+errorbar(x', medias, sem, 'k', 'LineStyle', 'none', 'LineWidth', 1.5);
+
+set(gca, 'XTickLabel', {'No Vulnerable', 'Vulnerable'}, 'FontSize', 12);
+ylabel('k (effort discounting)'); legend({'k_{self}', 'k_{other}'}, 'Location', 'best');
+title('Interacción Grupo × Agente');
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% Visualización estilo Lockwood et al. (2021) - Fig 2C
+
+%% Visualización estilo Lockwood et al. (2021) - Fig 2C
+
+figure('Position', [100 100 500 400]);
+
+% Datos
+k_self_all = params_all.k_self_2K1B;
+k_other_all = params_all.k_other_2K1B;
+grupo = params_all.grupo;
+idx_NV = strcmp(grupo, 'No_Vulnerable');
+idx_V = strcmp(grupo, 'Vulnerable');
+
+% P-values
+p_values(1) = ranksum(k_self_all(idx_NV), k_self_all(idx_V));
+p_values(2) = ranksum(k_other_all(idx_NV), k_other_all(idx_V));
+p_values(3) = signrank(k_self_all, k_other_all);
+
+% Medias y SEM
+medias = [mean(k_self_all(idx_NV)), mean(k_self_all(idx_V)); ...
+          mean(k_other_all(idx_NV)), mean(k_other_all(idx_V))];
+sems = [std(k_self_all(idx_NV))/sqrt(sum(idx_NV)), std(k_self_all(idx_V))/sqrt(sum(idx_V)); ...
+        std(k_other_all(idx_NV))/sqrt(sum(idx_NV)), std(k_other_all(idx_V))/sqrt(sum(idx_V))];
+
+% Barras
+b = bar(medias, 'grouped', 'EdgeColor', 'k', 'LineWidth', 1); hold on;
+b(1).FaceColor = [0.85 0.32 0.31]; % Rojo NV (Self)
+b(2).FaceColor = [1 0.6 0.6];      % Rojo claro V (Self)
+
+% Cambiar colores Other (azul)
+b(1).FaceColor = 'flat'; b(2).FaceColor = 'flat';
+b(1).CData = [0.85 0.32 0.31; 0.2 0.4 0.8];  % Fila1=Self rojo, Fila2=Other azul oscuro
+b(2).CData = [1 0.6 0.6; 0.6 0.8 1];          % Fila1=Self rojo claro, Fila2=Other azul claro
+
+% Barras de error
+x = [b(1).XEndPoints; b(2).XEndPoints];
+errorbar(x', medias, sems, 'k', 'LineStyle', 'none', 'LineWidth', 1.5, 'CapSize', 6);
+
+% Puntos individuales (solo dispersión vertical, posición X fija)
+scatter(ones(sum(idx_NV),1)*x(1,1), k_self_all(idx_NV), 15, [0.5 0.5 0.5], 'filled', 'MarkerFaceAlpha', 0.5);
+scatter(ones(sum(idx_V),1)*x(2,1), k_self_all(idx_V), 15, [0.5 0.5 0.5], 'filled', 'MarkerFaceAlpha', 0.5);
+scatter(ones(sum(idx_NV),1)*x(1,2), k_other_all(idx_NV), 15, [0.5 0.5 0.5], 'filled', 'MarkerFaceAlpha', 0.5);
+scatter(ones(sum(idx_V),1)*x(2,2), k_other_all(idx_V), 15, [0.5 0.5 0.5], 'filled', 'MarkerFaceAlpha', 0.5);
+
+% Ejes
+set(gca, 'XTick', [1 2], 'XTickLabel', {'Self', 'Other'}, 'FontSize', 12, 'Box', 'off');
+ylabel('Discount Rate (k)'); ylim([0 max(k_other_all)*1.3]);
+
+% Leyenda manual
+legend({'No Vulnerable', 'Vulnerable'}, 'Location', 'northeast', 'Box', 'off');
+
+% Significancias
+y_max = max(k_other_all) * 1.1;
+if p_values(1) < 0.05
+    plot([x(1,1) x(2,1)], [y_max*0.55 y_max*0.55], 'k-', 'LineWidth', 1, 'HandleVisibility', 'off');
+    text(1, y_max*0.57, '*', 'HorizontalAlignment', 'center', 'FontSize', 14);
+end
+if p_values(2) < 0.05
+    plot([x(1,2) x(2,2)], [y_max*0.95 y_max*0.95], 'k-', 'LineWidth', 1, 'HandleVisibility', 'off');
+    text(2, y_max*0.97, '*', 'HorizontalAlignment', 'center', 'FontSize', 14);
+end
+if p_values(3) < 0.05
+    plot([1 2], [y_max*1.1 y_max*1.1], 'k-', 'LineWidth', 1, 'HandleVisibility', 'off');
+    text(1.5, y_max*1.12, '*', 'HorizontalAlignment', 'center', 'FontSize', 14);
+end
+
+% Leyenda manual con cuadrados divididos
+legend('off');
+
+% Posición leyenda (ajustar según tu figura)
+lx = 0.75; ly = 0.85; sz = 0.04;
+
+% Cuadrado 1: Colores oscuros (Vulnerable)
+annotation('textbox', [lx ly sz sz], 'String', '', 'BackgroundColor', [0.85 0.32 0.31], 'EdgeColor', 'k');
+annotation('textbox', [lx+sz*0.5 ly sz*0.5 sz], 'String', '', 'BackgroundColor', [0.2 0.4 0.8], 'EdgeColor', 'none');
+annotation('textbox', [lx+sz+0.01 ly sz*3 sz], 'String', 'Vulnerable', 'EdgeColor', 'none', 'FontSize', 10);
+
+% Cuadrado 2: Colores claros (No Vulnerable)
+annotation('textbox', [lx ly-sz-0.02 sz sz], 'String', '', 'BackgroundColor', [1 0.6 0.6], 'EdgeColor', 'k');
+annotation('textbox', [lx+sz*0.5 ly-sz-0.02 sz*0.5 sz], 'String', '', 'BackgroundColor', [0.6 0.8 1], 'EdgeColor', 'none');
+annotation('textbox', [lx+sz+0.01 ly-sz-0.02 sz*3 sz], 'String', 'No Vulnerable', 'EdgeColor', 'none', 'FontSize', 10);
