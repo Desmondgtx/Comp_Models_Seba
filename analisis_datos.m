@@ -165,3 +165,6 @@ params_V.grupo = repmat({'Vulnerable'}, height(params_V), 1);
 
 params_all = [params_NV; params_V];
 writetable(params_all, 'params_all.csv');
+
+
+%% 6) ANOVA
