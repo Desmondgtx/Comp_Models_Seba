@@ -172,30 +172,13 @@ writetable(params_all, 'params_all.csv');
 
 
 
+
+
 %% 6) ANOVA
 
-params_all = readtable('params_all.csv');
+params_all = readtable('C:\Users\yangy\Desktop\Comp_Models_Seba\params_all.csv');
 
-% Preparar datos en formato wide
-anova_data = table(params_all.k_self_2K1B, params_all.k_other_2K1B, ...
-    categorical(params_all.grupo), ...
-    'VariableNames', {'k_self', 'k_other', 'grupo'});
-
-% Definir modelo y factor within
-rm = fitrm(anova_data, 'k_self-k_other ~ grupo', 'WithinDesign', table({'self';'other'}, 'VariableNames', {'agent'}));
-
-% ANOVA de medidas repetidas
-ranova_results = ranova(rm, 'WithinModel', 'agent');
-disp(ranova_results);
-
-% Efectos between-subjects
-between_results = anova(rm);
-disp(between_results);
-
-
-
-
-%% Visualización ANOVA
+% Visualización ANOVA
 
 % Calcular medias y SEM por grupo
 grupos = {'No_Vulnerable', 'Vulnerable'};
@@ -221,19 +204,6 @@ set(gca, 'XTickLabel', {'No Vulnerable', 'Vulnerable'}, 'FontSize', 12);
 ylabel('k (effort discounting)'); legend({'k_{self}', 'k_{other}'}, 'Location', 'best');
 title('Interacción Grupo × Agente');
 
-
-
-
-
-
-
-
-
-
-
-
-
-%% Visualización estilo Lockwood et al. (2021) - Fig 2C
 
 %% Visualización estilo Lockwood et al. (2021) - Fig 2C
 
